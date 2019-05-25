@@ -12,24 +12,25 @@ struct Node{
 }Node;
 
 struct Node* head;
+//print value in linked list
 void
 printer(){
-	printf("printer\n");
 	struct Node* current = head;
 	while(current !=NULL){
 		printf("%d->", current->count);
 		current = current->next;
 	}
+	printf("\n");
 	return;
 }
 
+
 void
-detect(){
-	printf("detector\n");
+detect(){//detect deadlock
+	//printer();
 	struct Node* current = head;
 	while(current !=NULL){
 		if(current->count >=0){
-			printf("count : %d",current->count);
 			return;
 		}
 		current = current->next;
@@ -40,7 +41,8 @@ detect(){
 	return;
 }
 	
-void push(struct Node** head_ref,pthread_mutex_t *mutex) 
+void/*push item in linked list*/
+push(struct Node** head_ref,pthread_mutex_t *mutex) 
 { 
     /* allocate node */
     struct Node* new_node = 
@@ -55,6 +57,7 @@ void push(struct Node** head_ref,pthread_mutex_t *mutex)
     /* move the head to point to the new node */
     (*head_ref)    = new_node; 
 }
+
 int
 lock_find_mutex(pthread_mutex_t *mutex){
 	struct Node* current = head;
@@ -62,7 +65,7 @@ lock_find_mutex(pthread_mutex_t *mutex){
 	while (current != NULL) 
     	{	
         	if (current->mutex == mutex){
-			--current->count;
+			current->count = current->count-1;
 			return 1; 
             	}
         	current = current->next; 
@@ -80,8 +83,8 @@ ulock_find_mutex(pthread_mutex_t *mutex){
         while (current != NULL)
         {
                 if (current->mutex == mutex){
-			if(current->count ==0){
-				current->count++;
+			if(current->count <=0){
+				current->count = current->count + 1;
 				return 1;
 			}
                         else return 1;
@@ -100,25 +103,13 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 	lockp = dlsym(RTLD_NEXT, "pthread_mutex_lock") ;
 	if ((error = dlerror()) != 0x0) 
 		exit(1) ;
-    	
-	char buf[50];
-	if(lock_find_mutex(mutex))
-		{
-		
-		snprintf(buf, 50, "find\n");
-		fputs(buf, stderr);
-		printer();
-		detect();
+    
+	/*find mutex in linked list and update status or push new node*/
+	lock_find_mutex(mutex);
 
-		}else{
-		char buf2[50] ;
-
-		snprintf(buf2, 50, "in\n") ;
-		fputs(buf2, stderr) ;
-		printer();
-		detect();
+	/*detect deadlock*/
+	detect();
 		
-	}
 	lockp(mutex);
 	return 0; 	
 }
@@ -132,11 +123,10 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex)
 	if ((error = dlerror()) != 0x0) 
 		exit(1) ;
     
-    	ulockp(mutex);
-    
+	ulock_find_mutex(mutex);
 	char buf[50] ;
 	snprintf(buf, 50, "out\n") ;
 	fputs(buf, stderr) ;
-	printer();
+	ulockp(mutex);
 	return 77 ; 	
 }
