@@ -10,7 +10,7 @@ pthread_mutex_t mutex2 = PTHREAD_MUTEX_INITIALIZER;
 void 
 noise()
 {
-	//usleep(rand() % 1000) ;
+	usleep(rand() % 1000) ;
 }
 
 void *

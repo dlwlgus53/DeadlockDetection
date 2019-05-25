@@ -5,6 +5,80 @@
 #include <dlfcn.h>
 #include <execinfo.h>
 
+struct Node{
+	int count;
+	pthread_mutex_t *mutex;
+	struct Node *next;
+}Node;
+
+struct Node* head;
+
+void
+detect(){
+	struct Node* current = head;
+	while(current !=NULL){
+		if(current->count >=0){
+			return;
+		}
+		current = current->next;
+	}
+	char buf[50];
+	snprintf(buf,50,"deadlock\n");
+	fputs(buf,stderr);
+	return;
+}
+	
+void push(struct Node** head_ref,pthread_mutex_t *mutex) 
+{ 
+    /* allocate node */
+    struct Node* new_node = 
+            (struct Node*) malloc(sizeof(struct Node)); 
+  
+    /* put in the key  */
+    new_node->mutex  = mutex; 
+    new_node->count = 0; 
+    /* link the old list off the new node */
+    new_node->next = (*head_ref); 
+  
+    /* move the head to point to the new node */
+    (*head_ref)    = new_node; 
+}
+int
+lock_find_mutex(pthread_mutex_t *mutex){
+	struct Node* current = head;
+    	int find =0;
+	while (current != NULL) 
+    	{	 
+        	if (current->mutex == mutex){
+			current->count--;
+			return 1; 
+            	}
+        	current = current->next; 
+    	}
+
+	push(&head,mutex);
+			 
+	return 0;	 
+}
+
+int
+ulock_find_mutex(pthread_mutex_t *mutex){
+        struct Node* current = head;
+        int find =0;
+        while (current != NULL)
+        {
+                if (current->mutex == mutex){
+			if(current->count ==0){
+				current->count++;
+				return 1;
+			}
+                        else return 1;
+                }
+                current = current->next;
+        }
+
+        return 0;
+}
 int 
 pthread_mutex_lock (pthread_mutex_t *mutex)
 {
@@ -15,10 +89,17 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 	if ((error = dlerror()) != 0x0) 
 		exit(1) ;
     	lockp(mutex);
-
-	char buf[50] ;
-	snprintf(buf, 50, "in\n") ;
-	fputs(buf, stderr) ;
+	char buf[50];
+	if(lock_find_mutex(mutex))
+		{
+		snprintf(buf, 50, "find\n");
+		fputs(buf, stderr);
+		return 78;
+	}	
+	
+	char buf2[50] ;
+	snprintf(buf2, 50, "in\n") ;
+	fputs(buf2, stderr) ;
 	return 77 ; 	
 }
 
