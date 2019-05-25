@@ -1,0 +1,2 @@
+ gcc -g -Wall -o test1 test1.c myrand.so
+ 
