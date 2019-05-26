@@ -39,6 +39,17 @@ void addToMonitor( pthread_t thid,pthread_mutex_t *mutex){//add to monitor array
     }
 }
 
+// We return the pointer
+void **create2darray(int count) /* Allocate the array */
+{
+    /* Check if allocation succeeded. (check for NULL pointer) */
+    int i;
+    adjArray = malloc(count*sizeof(int *));
+    for(i = 0 ; i < count ; i++)
+        adjArray[i] = malloc( count*sizeof(int) );
+}
+
+
 //now have to find graph adjArray
 int mutexArray(){
     
@@ -46,9 +57,9 @@ int mutexArray(){
     int lastPoint=0;
     //배열을 반복문을 돌리는데 tid=0을 만나지않을 때 까지
     for(int i=0 ;i<threadNum; i++){
-	if(monitor[i][0].thid == 0){
-		return lastPoint;
-	}
+        if(monitor[i][0].thid == 0){
+            return lastPoint;
+        }
 	for(int j=0; j<mutexNum; j++){
             if(monitor[i][j].thid == 0)    break;
             else{
@@ -78,25 +89,20 @@ int getNum(pthread_mutex_t *mutex, int length){
 }
 
 void MakeAdjArray(){
-    //createArray();
-    
     int count = mutexArray();
-    int adjArray[count][count];
-   for(int i=0; i<count; i++){
-	for(int j=0; j<count; j++){
-		adjArray[i][j] =0;
-	}
-} 
-    for(int i=0 ;i<threadNum; i++){
-    if(monitor[i][0].thid == 0){
-        for(int i=0; i<count; i++){
-            for(int j=0; j<count; j++){
-                printf("%d ", adjArray[i][j]);
-            }
-            printf("\n");
+    create2darray(count);
+   // int adjArray[count][count];
+    
+    for(int i=0; i<count; i++){
+        for(int j=0; j<count; j++){
+            adjArray[i][j] =0;
         }
-            return;
     }
+    
+    for(int i=0 ;i<threadNum; i++){
+        if(monitor[i][0].thid == 0){
+            return;
+        }
     for(int j=0; j<mutexNum; j++){
         if(monitor[i][j+1].mutex == NULL)    break;//a->b 정보가 필요하기 때문에 다음 인덱스 정보인 j+1의 유무도 확인해야함.
         else{   
@@ -112,7 +118,23 @@ void MakeAdjArray(){
     
    
     return;
-} 
+}
+//find cycle
+int cycleFinder(int checker[],int i, int count){
+    checker[i] = 1;
+    for(int j=0; j<count; j++){
+        if(adjArray[i][j] !=0){
+            if(checker[j] == 1) return 1;
+            else{
+                return cycleFinder(checker, j,count);
+            }
+            
+        }
+    }
+    
+    
+}
+
         
 void printer(){
 	printf("=======================\n");
@@ -128,6 +150,7 @@ void printer(){
         }
     }
 }
+
 void adjPrinter(int** adjList){
 	int count = mutexArray();
     printf("adjPrinter count : %d\n", count);
@@ -138,6 +161,8 @@ void adjPrinter(int** adjList){
 		printf("\n");
 	}
 }
+
+
 
 int
 pthread_mutex_lock (pthread_mutex_t *mutex)
@@ -155,10 +180,13 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 	if (n_mutex == 1) {
 		//add to monitor array
 		addToMonitor(pthread_self(), mutex);
-		//printer();
         MakeAdjArray();
-//        adjPrinter(MakeAdjArray());
-		//adjArray();
+        //adjPrinter(adjArray);
+        int count =mutexArray();
+        int checker[count];
+        for(int i=0; i<count; i++)  checker[i] = 0;
+        int cycle = cycleFinder(checker,0,count);
+        printf("cycle : %d\n", cycle);
 		int i ;
 		void * arr[10] ;
 		char ** stack ;
