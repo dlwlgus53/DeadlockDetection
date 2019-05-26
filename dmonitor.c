@@ -16,28 +16,21 @@ struct Mnode//node for monitor
 };
 
 struct Mnode monitor[threadNum][mutexNum];
-
-void init(){
-	for(int i=0; i<threadNum; i++){
-		for(int j=0; j<mutexNum; j++){
-			monitor[i][j].thid = -1;
-		}
-	}
-}
+pthread_mutex_t*mArr[mutexNum];
 
 void addToMonitor( pthread_t thid,pthread_mutex_t *mutex){//add to monitor array
     for(int i=0; i<threadNum; i++){
         if(monitor[i][0].thid == thid){
             for(int j=0; j<mutexNum; j++){
-                //thidëŠ” ê°™ì„ë•Œ ë§ˆì§€ë§‰ ì¹¸ì„ ì°¾ì•„ì„œ ë„£ì–´ì£¼ë©´ ëœë‹¤.
-                if(monitor[i][j].thid == 0){//ë§ˆì§€ë§‰ ì¹¸ ë°œê²¬
+                //thid´Â °°À»¶§ ¸¶Áö¸· Ä­À» Ã£¾Æ¼­ ³Ö¾îÁÖ¸é µÈ´Ù.
+                if(monitor[i][j].thid == 0){//¸¶Áö¸· Ä­ ¹ß°ß
                     monitor[i][j].thid = thid;
                     monitor[i][j].mutex = mutex;
                     return;
                 }        
             }
         }else if(monitor[i][0].thid == 0){
-            //ê°™ì€ thidê°€ ì—†ì„ë•Œ -> ìƒˆë¡­ê²Œ ì‹œìž‘
+            //°°Àº thid°¡ ¾øÀ»¶§ -> »õ·Ó°Ô ½ÃÀÛ
             monitor[i][0].thid = thid;
             monitor[i][0].mutex = mutex;
             return;
@@ -45,6 +38,66 @@ void addToMonitor( pthread_t thid,pthread_mutex_t *mutex){//add to monitor array
     }
 }
 
+//now have to find graph adjArray
+int mutexArray(){
+    pthread_mutex_t *mArr[mutexNum];
+    //mutex array ¾È¿¡ ¼­·Î ´Ù¸¥ mutex¸¦ ³Ö¾îÁà¾ßÇÔ.
+    int lastPoint=0;
+    //¹è¿­À» ¹Ýº¹¹®À» µ¹¸®´Âµ¥ tid=0À» ¸¸³ªÁö¾ÊÀ» ¶§ ±îÁö
+    for(int i=0 ;i<threadNum; i++){
+	if(monitor[i][0].thid == 0){
+		return lastPoint;
+	}
+	for(int j=0; j<mutexNum; j++){
+            if(monitor[i][j].thid == 0)    break;
+            else{
+                int diff =1;// »õ·Î¿î °ÍÀÎÁö ¾Æ´Ñ °ÍÀÎÁö¸¦ ¾Ë·ÁÁÖ´Â º¯¼ö-> »õ·Ó´Ù°í ÃÊ±âÈ­
+                for(int k=0; k<lastPoint; k++){//Áö±ÝÀÇ mutex°¡ ±âÁ¸¿¡ ÀÖ´Â °ÍÀÎÁö °Ë»ç.
+                    if(mArr[j]!=NULL && monitor[i][j].mutex == mArr[k])//»õ·ÓÁö ¾Ê´Ù-> diff=0 À¸·Î º¯°æ
+                        diff=0;
+                }
+                if(diff ==1){
+                    mArr[lastPoint] = monitor[i][j].mutex;
+                    lastPoint++;
+                }
+            }
+        }
+    }
+
+	//¤¿©±â±îÁö ÇÏ¸é ÃÑ ¸î°³ÀÇ mutexÁ¾·ù°¡ ÀÖ´Â Áö ¾Ë ¼ö ÀÖ´Ù.
+	return lastPoint;
+	
+}
+int getNum(pthread_mutex_t *mutex, int length){
+    for(int i=0; i<length; i++){
+        if(mArr[i] == mutex)
+            return i;
+    }
+}
+int**  MakeAdjArray(){
+                
+    int count = mutexArray();
+    int adjArray[count][count];
+
+    for(int i=0 ;i<threadNum; i++){
+    if(monitor[i][0].thid == 0){
+            return;
+    }
+    for(int j=0; j<mutexNum; j++){
+        if(monitor[i][j+1].thid == 0)    break;//a->b Á¤º¸°¡ ÇÊ¿äÇÏ±â ¶§¹®¿¡ ´ÙÀ½ ÀÎµ¦½º Á¤º¸ÀÎ j+1ÀÇ À¯¹«µµ È®ÀÎÇØ¾ßÇÔ.
+        else{   
+                //src->dest¿¡ °ü·Ã ÀÎµ¦½º¸¦ Ã£À½
+                int src = getNum(monitor[i][j].mutex, count);
+                int dest = getNum(monitor[i][j+1].mutex, count);
+                //adjArray¿¡ Ç¥½Ã
+                adjArray[src][dest] = 1;
+            }
+        }
+    }
+	return &adjArray;
+}
+
+        
 void printer(){
 	printf("=======================\n");
     for(int i=0 ;i<threadNum; i++){
@@ -59,6 +112,17 @@ void printer(){
         }
     }
 }
+void adjPrinter(int** adjList){
+	int count = mutexArray();
+	for(int i=0; i<count; i++){
+		for(int j=0; j<count; j++){
+			printf("%d ",adjList[i][j]);
+		}
+		printf("\n");
+	}
+	
+}
+
 int
 pthread_mutex_lock (pthread_mutex_t *mutex)
 {
@@ -76,6 +140,7 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 		//add to monitor array
 		addToMonitor(pthread_self(), mutex);
 		printer();
+		//adjArray();
 		int i ;
 		void * arr[10] ;
 		char ** stack ;
@@ -91,9 +156,8 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 		fprintf(stderr, "============\n\n") ;
 		*/
 		}
-
+    	
 	n_mutex-= 1 ;
 	lockp(mutex);
 	return 0;
 }
-
