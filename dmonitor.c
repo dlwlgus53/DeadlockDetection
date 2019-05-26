@@ -17,6 +17,7 @@ struct Mnode//node for monitor
 
 struct Mnode monitor[threadNum][mutexNum];
 pthread_mutex_t*mArr[mutexNum];
+int ** adjArray;
 
 void addToMonitor( pthread_t thid,pthread_mutex_t *mutex){//add to monitor array
     for(int i=0; i<threadNum; i++){
@@ -40,7 +41,7 @@ void addToMonitor( pthread_t thid,pthread_mutex_t *mutex){//add to monitor array
 
 //now have to find graph adjArray
 int mutexArray(){
-    pthread_mutex_t *mArr[mutexNum];
+    
     //mutex array 안에 서로 다른 mutex를 넣어줘야함.
     int lastPoint=0;
     //배열을 반복문을 돌리는데 tid=0을 만나지않을 때 까지
@@ -69,41 +70,48 @@ int mutexArray(){
 	
 }
 int getNum(pthread_mutex_t *mutex, int length){
-    for(int i=0; i<length; i++){
-        if(mArr[i] == mutex)
+	for(int i=0; i<length; i++){
+        if(mArr[i] == mutex){
             return i;
+	}
     }
 }
-int **createArray() /* Allocate the array */
-{
-    /* Check if allocation succeeded. (check for NULL pointer) */
-    int count = mutexArray();
-    int i, **array;
-    array = malloc(count*sizeof(int *));
-    for(i = 0 ; i < count; i++)
-        array[i] = malloc( count*sizeof(int) );
-    return array;
-}
 
-int** MakeAdjArray(){
-    int** adjArray = createArray();    
+void MakeAdjArray(){
+    //createArray();
+    
     int count = mutexArray();
+    int adjArray[count][count];
+   for(int i=0; i<count; i++){
+	for(int j=0; j<count; j++){
+		adjArray[i][j] =0;
+	}
+} 
     for(int i=0 ;i<threadNum; i++){
     if(monitor[i][0].thid == 0){
+        for(int i=0; i<count; i++){
+            for(int j=0; j<count; j++){
+                printf("%d ", adjArray[i][j]);
+            }
+            printf("\n");
+        }
             return;
     }
     for(int j=0; j<mutexNum; j++){
-        if(monitor[i][j+1].thid == 0)    break;//a->b 정보가 필요하기 때문에 다음 인덱스 정보인 j+1의 유무도 확인해야함.
+        if(monitor[i][j+1].mutex == NULL)    break;//a->b 정보가 필요하기 때문에 다음 인덱스 정보인 j+1의 유무도 확인해야함.
         else{   
                 //src->dest에 관련 인덱스를 찾음
                 int src = getNum(monitor[i][j].mutex, count);
                 int dest = getNum(monitor[i][j+1].mutex, count);
                 //adjArray에 표시
+            printf("src : %d, dest %d\n", src, dest);
                 adjArray[src][dest] = 1;
             }
         }
     }
-	return adjArray;
+    
+   
+    return;
 } 
         
 void printer(){
@@ -122,13 +130,13 @@ void printer(){
 }
 void adjPrinter(int** adjList){
 	int count = mutexArray();
+    printf("adjPrinter count : %d\n", count);
 	for(int i=0; i<count; i++){
 		for(int j=0; j<count; j++){
 			printf("%d ",adjList[i][j]);
 		}
 		printf("\n");
 	}
-	
 }
 
 int
@@ -147,7 +155,9 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 	if (n_mutex == 1) {
 		//add to monitor array
 		addToMonitor(pthread_self(), mutex);
-		printer();
+		//printer();
+        MakeAdjArray();
+//        adjPrinter(MakeAdjArray());
 		//adjArray();
 		int i ;
 		void * arr[10] ;
@@ -163,10 +173,10 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 			fprintf(stderr, "[%d] %s\n", i, stack[i]) ;
 		fprintf(stderr, "============\n\n") ;
 		*/
-		adjPrinter(MakeAdjArray());
+		lockp(mutex);
 		}
     	
 	n_mutex-= 1 ;
-	lockp(mutex);
+
 	return 0;
 }
