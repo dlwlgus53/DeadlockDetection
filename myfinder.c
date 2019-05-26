@@ -17,7 +17,7 @@ void
 printer(){
 	struct Node* current = head;
 	while(current !=NULL){
-		printf("%d->", current->count);
+		printf(" %d->", current->count);
 		current = current->next;
 	}
 	printf("\n");
@@ -27,7 +27,7 @@ printer(){
 
 void
 detect(){//detect deadlock
-	//printer();
+	printer();
 	struct Node* current = head;
 	while(current !=NULL){
 		if(current->count >=0){
