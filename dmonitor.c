@@ -74,11 +74,20 @@ int getNum(pthread_mutex_t *mutex, int length){
             return i;
     }
 }
-int**  MakeAdjArray(){
-                
+int **createArray() /* Allocate the array */
+{
+    /* Check if allocation succeeded. (check for NULL pointer) */
     int count = mutexArray();
-    int adjArray[count][count];
+    int i, **array;
+    array = malloc(count*sizeof(int *));
+    for(i = 0 ; i < count; i++)
+        array[i] = malloc( count*sizeof(int) );
+    return array;
+}
 
+int** MakeAdjArray(){
+    int** adjArray = createArray();    
+    int count = mutexArray();
     for(int i=0 ;i<threadNum; i++){
     if(monitor[i][0].thid == 0){
             return;
@@ -94,9 +103,8 @@ int**  MakeAdjArray(){
             }
         }
     }
-	return &adjArray;
-}
-
+	return adjArray;
+} 
         
 void printer(){
 	printf("=======================\n");
@@ -155,6 +163,7 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 			fprintf(stderr, "[%d] %s\n", i, stack[i]) ;
 		fprintf(stderr, "============\n\n") ;
 		*/
+		adjPrinter(MakeAdjArray());
 		}
     	
 	n_mutex-= 1 ;
