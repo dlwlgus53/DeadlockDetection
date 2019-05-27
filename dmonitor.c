@@ -14,6 +14,12 @@ struct Mnode//node for monitor
         pthread_t thid;
         pthread_mutex_t *mutex;
 };
+struct Edge
+{
+	pthread_t thid;
+	pthread_mutex_t *src;
+	pthread_mutex_t *dest;
+}
 
 struct Mnode monitor[threadNum][mutexNum];
 pthread_mutex_t*mArr[mutexNum];
@@ -158,36 +164,21 @@ countMutex(int arr[], int index, int count){
 	return mutexNode;
 }
 
-
-        
-void printer(){
-	printf("=======================\n");
-    for(int i=0 ;i<threadNum; i++){
-        printf("\n");
-	if(monitor[i][0].thid == 0)    return;
-        printf("[%d] ", i);
-	for(int j=0; j<mutexNum; j++){
-            if(monitor[i][j].thid == 0)    break;
-            else{
-                printf("%lu ", monitor[i][j].thid);
-            }
-        }
-    }
+void
+fillEges(int* checker, int index, int* edges){
 }
-
-void adjPrinter(int** adjList){
-	int count = mutexArray();
-    printf("adjPrinter count : %d\n", count);
-	for(int i=0; i<count; i++){
-		for(int j=0; j<count; j++){
-			printf("%d ",adjList[i][j]);
-		}
-		printf("\n");
-	}
+//∞∞¿∫ æ≤∑πµÂø° §¿÷¥¬¡ˆ ∞ÀªÁ
+int check1(){
+	return 1;
 }
-
-
-
+//guard∞° ¿÷¥¬¡ˆ ∞ÀªÁ
+int check2(){
+	return 1;
+}
+//
+int check3(){
+	return 1;
+}
 int
 pthread_mutex_lock (pthread_mutex_t *mutex)
 {
@@ -215,26 +206,31 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 		int index=cycleFinder(checker,0,count,0);		
 		if(index){
 			//ªÁ¿Ã≈¨¿Ã ¿÷¥Ÿ∏È
-			int cycledMutex = countMutex(checker,index,count);
-			printf("%d",cycledMutex);
+			int cycledMutex = countMutex(checker,index,count);//ªÁ¿Ã≈¨ø° ¿÷¥¬ ≥ÎµÂ ºˆ
+			Edge edges[cycleMutex];
+			fillEdges(checker,index,edges);
+
+			if(check1()&&check2()&&check3()){
+				//¿ß«Ë«— ªÁ¿Ã≈¨¿”¿ª ∞®¡ˆ-> backtrace »£√‚
+				int i ;
+                		void * arr[10] ;
+                		char ** stack ;
+
+
+                		size_t sz = backtrace(arr, 10) ;
+                		stack = backtrace_symbols(arr, sz) ;
+                			
+                		fprintf(stderr, "Stack trace\n") ;
+                		fprintf(stderr, "============\n") ;
+                		for (i = 0 ; i < sz ; i++)
+                        		fprintf(stderr, "[%d] %s\n", i, stack[i]) ;
+                		fprintf(stderr, "============\n\n") ;
+                
+			
+			}
 		}
+	}	
 		
-		int i ;
-		void * arr[10] ;
-		char ** stack ;
-
-
-		size_t sz = backtrace(arr, 10) ;
-		stack = backtrace_symbols(arr, sz) ;
-		/*
-		fprintf(stderr, "Stack trace\n") ;
-		fprintf(stderr, "============\n") ;
-		for (i = 0 ; i < sz ; i++)
-			fprintf(stderr, "[%d] %s\n", i, stack[i]) ;
-		fprintf(stderr, "============\n\n") ;
-		*/
-		lockp(mutex);
-		}
     	
 	n_mutex-= 1 ;
 
