@@ -11,19 +11,12 @@
 
 struct Mnode//node for monitor
 {       
-        pthread_t thid;
+        pthread_t thid; // initialized 0 
         pthread_mutex_t *mutex;
 };
 
 struct Mnode monitor[threadNum][mutexNum];
 
-void init(){
-	for(int i=0; i<threadNum; i++){
-		for(int j=0; j<mutexNum; j++){
-			monitor[i][j].thid = -1;
-		}
-	}
-}
 
 void addToMonitor( pthread_t thid,pthread_mutex_t *mutex){//add to monitor array
     for(int i=0; i<threadNum; i++){
