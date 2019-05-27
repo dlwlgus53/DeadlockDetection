@@ -211,7 +211,15 @@ fillEdges(int* checker, int index, struct Edge* edges,int cycledMutex){
 }
 //°°Àº ¾²·¹µå¿¡ ¤ÀÖ´ÂÁö °Ë»ç
 int check1(struct Edge edges[], int count){
-	return 1;
+	int diff =1;
+	for(int i=0; i<count-1; i++){
+		for(int j=i+1; j<count; j++){
+			if(edges[i].thid == edges[j].thid)	diff=0;
+			}
+		}
+	//1 -> À§ÇèÇÏ´Ù 0 -> À§ÇèÇÏÁö ¾Ê´Ù
+	return diff;
+
 }
 //guard°¡ ÀÖ´ÂÁö °Ë»ç
 int check2(struct Edge edges[],int count){
