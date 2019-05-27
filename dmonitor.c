@@ -25,6 +25,9 @@ pthread_mutex_t localmutex = PTHREAD_MUTEX_INITIALIZER;
 struct Mnode monitor[threadNum][mutexNum];
 pthread_mutex_t*mArr[mutexNum];
 int ** adjArray;
+//thread array(to see hierachy of thread)
+pthread_t thArr[threadNum][threadNum]={0};
+
 
 void addToMonitor( pthread_t thid,pthread_mutex_t *mutex){//add to monitor array
     for(int i=0; i<threadNum; i++){
@@ -251,6 +254,7 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
                 exit(1); 
 
 	if (n_mutex == 1) {
+				
 		pthread_mutex_lock(&localmutex);
 		//add to monitor array
 		addToMonitor(pthread_self(), mutex);
@@ -299,3 +303,42 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 
 	return 0;
 }
+
+int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *), void *arg){
+	int return_value=0;
+	static __thread int n_create = 0 ; //https://gcc.gnu.org/onlinedocs/gcc-3.3/gcc/Thread-Local.html
+	n_create += 1 ;
+
+	void *(*pthread_createp)(size_t size) ;
+	char * error ;
+	
+	pthread_createp = dlsym(RTLD_NEXT, "pthread_create") ;
+	if ((error = dlerror()) != 0x0) 
+		exit(1) ;
+	
+
+	if (n_create == 1) {
+		
+		 pthread_mutex_lock(&localmutex);
+		return_value = (void *)pthread_createp(*thread,(void*)*attr,*start_routine,(void *)arg);
+		/*int i ;
+		void * arr[10] ;
+		char ** stack ;
+
+		fprintf(stderr, "malloc(%d)=%p\n", (int) size, ptr) ;
+
+		size_t sz = backtrace(arr, 10) ;
+		stack = backtrace_symbols(arr, sz) ;
+
+		fprintf(stderr, "Stack trace\n") ;
+		fprintf(stderr, "============\n") ;
+		for (i = 0 ; i < sz ; i++)
+			fprintf(stderr, "[%d] %s\n", i, stack[i]) ;
+		fprintf(stderr, "============\n\n") ;
+		pthread_mutex_unlock(&localmutex);*/
+	}
+
+	n_create -= 1 ;
+	return return_value ; 
+}
+
