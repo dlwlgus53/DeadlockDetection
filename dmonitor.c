@@ -130,7 +130,7 @@ int cycleFinder(int* checker,int i, int count,int index){
                     printf("%d ", checker[j]);
                 }
                 printf("|");*/
-                return index;
+                return index-1;
             }
             else{
 		index++;
@@ -143,6 +143,21 @@ int cycleFinder(int* checker,int i, int count,int index){
 	return 0;
     }
 }
+
+int
+countMutex(int arr[], int index, int count){
+	int check[count];
+	for(int i=0; i<count; i++)	check[i] =0;
+	int mutexNode=0;
+	while(1){
+		check[index]=1;
+		mutexNode++;
+		index  = arr[index];
+		if(check[index] != 0)	break;
+	}
+	return mutexNode;
+}
+
 
         
 void printer(){
@@ -197,9 +212,13 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 		for(int i=0; i<count; i++){
         	    checker[i] = 0;
 	        }
-	
-		printf("cycle : %d\n",cycleFinder(checker,0,count,0));
-		printf("checked %d ",checker[2]);
+		int index=cycleFinder(checker,0,count,0);		
+		if(index){
+			//사이클이 있다면
+			int cycledMutex = countMutex(checker,index,count);
+			printf("%d",cycledMutex);
+		}
+		
 		int i ;
 		void * arr[10] ;
 		char ** stack ;
