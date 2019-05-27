@@ -210,15 +210,15 @@ fillEdges(int* checker, int index, struct Edge* edges,int cycledMutex){
 	}
 }
 //°°Àº ¾²·¹µå¿¡ ¤ÀÖ´ÂÁö °Ë»ç
-int check1(){
+int check1(struct Edge edges[], int count){
 	return 1;
 }
 //guard°¡ ÀÖ´ÂÁö °Ë»ç
-int check2(){
+int check2(struct Edge edges[],int count){
 	return 1;
 }
 //
-int check3(){
+int check3(struct Edge edges[],int count){
 	return 1;
 
 }
@@ -243,7 +243,7 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
         	//adjPrinter(adjArray);
         	int count =mutexArray();
        		int checker[count];
-        	int ans[count];
+        	
 		for(int i=0; i<count; i++){
         	    checker[i] = 0;
 	        }
@@ -252,10 +252,10 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 			//»çÀÌÅ¬ÀÌ ÀÖ´Ù¸é
 			int cycledMutex = countMutex(checker,index,count);//»çÀÌÅ¬¿¡ ÀÖ´Â ³ëµå ¼ö
 			printf("%d", cycledMutex);
-			struct Edge edges[cycledMutex];
+			struct Edge edges[cycledMutex];//À§ÇèÇÒ ¼ö ÀÖ´Â node¿¡ ´ëÇÑ Á¤º¸°¡ ´ã°ÜÀÖÀ½
 			fillEdges(checker,index,edges,cycledMutex);
-		/*
-			if(check1()&&check2()&&check3()){
+			/*edges ¾È¿¡´Â mutex* src, mutex* dest, thid Á¤º¸°¡ ÀÖ´Â ¹è¿­, count = ¹®Á¦°¡ µÇ´Â node ¼ö*/ 
+			if(check1(edges, count)&&check2(edges, count)&&check3(edges, count)){
 				//À§ÇèÇÑ »çÀÌÅ¬ÀÓÀ» °¨Áö-> backtrace È£Ãâ
 				int i ;
                 		void * arr[10] ;
@@ -272,7 +272,7 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
                 		fprintf(stderr, "============\n\n") ;
                 
 			
-			}*/
+			}
 		}
 		pthread_mutex_unlock(&localmutex);
 	}	
