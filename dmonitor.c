@@ -119,17 +119,17 @@ void MakeAdjArray(){
     return;
 }
 //find cycle
-int cycleFinder(int checker[],int i, int count,int index){
+int cycleFinder(int* checker,int i, int count,int index){
     checker[i] = index;
     int j=0;
     for(j=0; j<count; j++){
         if(adjArray[i][j] == 1){
             if(checker[j] == 1){
-                printf("|");
+               /* printf("|");
                 for (int j=0; j<count; j++){
                     printf("%d ", checker[j]);
                 }
-                printf("|");
+                printf("|");*/
                 return index;
             }
             else{
@@ -189,17 +189,17 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 	if (n_mutex == 1) {
 		//add to monitor array
 		addToMonitor(pthread_self(), mutex);
-        MakeAdjArray();
-        //adjPrinter(adjArray);
-        int count =mutexArray();
-        int checker[count];
-        int ans[count];
-	for(int i=0; i<count; i++){
-            checker[i] = 0;
-	    ans[i]=0;
-        }
+        	MakeAdjArray();
+        	//adjPrinter(adjArray);
+        	int count =mutexArray();
+       		int checker[count];
+        	int ans[count];
+		for(int i=0; i<count; i++){
+        	    checker[i] = 0;
+	        }
 	
-	printf("cycle : %d\n",cycleFinder(checker,0,count,0));
+		printf("cycle : %d\n",cycleFinder(checker,0,count,0));
+		printf("checked %d ",checker[2]);
 		int i ;
 		void * arr[10] ;
 		char ** stack ;
