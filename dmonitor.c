@@ -273,13 +273,16 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
                 		size_t sz = backtrace(arr, 10) ;
                 		stack = backtrace_symbols(arr, sz) ;
                 			
-                		fprintf(stderr, "Stack trace\n") ;
-                		fprintf(stderr, "============\n") ;
-                		for (i = 0 ; i < sz ; i++)
-                        		fprintf(stderr, "[%d] %s\n", i, stack[i]) ;
-                		fprintf(stderr, "============\n\n") ;
-                
-			
+				FILE * fp;
+   				/* open the file for writing*/
+   				fp = fopen ("dmonitor.trace","w");
+ 
+   				for(i = 0; i < sz;i++){		
+       					fprintf (fp, "%s\n", stack[i]);
+   				}
+ 
+   				/* close the file*/  
+   				fclose (fp);
 			}
 		}
 		pthread_mutex_unlock(&localmutex);
