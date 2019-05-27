@@ -19,8 +19,9 @@ struct Edge
 	pthread_t thid;
 	pthread_mutex_t *src;
 	pthread_mutex_t *dest;
-}
+};
 
+pthread_mutex_t localmutex = PTHREAD_MUTEX_INITIALIZER;
 struct Mnode monitor[threadNum][mutexNum];
 pthread_mutex_t*mArr[mutexNum];
 int ** adjArray;
@@ -125,22 +126,22 @@ void MakeAdjArray(){
     return;
 }
 //find cycle
-int cycleFinder(int* checker,int i, int count,int index){
-    checker[i] = index;
+int cycleFinder(int* checker,int i, int count){
+  //checker[i] = index;
     int j=0;
     for(j=0; j<count; j++){
         if(adjArray[i][j] == 1){
             if(checker[j] == 1){
-               /* printf("|");
+                printf("|");
                 for (int j=0; j<count; j++){
                     printf("%d ", checker[j]);
                 }
-                printf("|");*/
-                return index-1;
+                printf("|");
+                return 1;
             }
             else{
-		index++;
-                return cycleFinder(checker, j,count,index);
+		checker[i] = j;
+                return cycleFinder(checker, j,count);
             }
             
         }
@@ -156,16 +157,57 @@ countMutex(int arr[], int index, int count){
 	for(int i=0; i<count; i++)	check[i] =0;
 	int mutexNode=0;
 	while(1){
+		printf("index %d ",index);
 		check[index]=1;
 		mutexNode++;
-		index  = arr[index];
+		index = arr[index];
 		if(check[index] != 0)	break;
 	}
 	return mutexNode;
 }
-
+pthread_t
+findThid(pthread_mutex_t *src, pthread_mutex_t *dest){
+	for(int i=0 ;i<threadNum; i++){
+        if(monitor[i][0].thid == 0){
+		printf("find error..\n");
+            	return -1;
+        }
+        for(int j=0; j<mutexNum; j++){
+            if(monitor[i][j+1].thid == 0)    break;
+            else{
+			if(monitor[i][j].mutex == src && monitor[i][j+1].mutex == dest){
+				return monitor[i][j].thid;
+			} 
+		}
+	    }
+        }
+	return -1;
+}
 void
-fillEges(int* checker, int index, int* edges){
+fillEdges(int* checker, int index, struct Edge* edges,int cycledMutex){
+	//a->b, b->c∂Û¥¬ ¡§∫∏∏¶ ≥÷∞Ì ΩÕ¿∫µ•	
+	//1->2	∏¶ a->b∑Œ πŸ≤Ÿ¿⁄
+	for(int i=0; i<cycledMutex; i++){
+		int srcNum = checker[index];
+		int destNum = checker[srcNum];
+
+       		pthread_mutex_t *src = mArr[srcNum];
+        	pthread_mutex_t *dest = mArr[destNum];
+
+		//find a-b in array
+		int thid = findThid(src, dest);
+		//add to edges
+		edges[i].src = src;
+		edges[i].dest = dest;
+		edges[i].thid = thid;
+
+		index = destNum;
+		printf("destNum : %d\n", destNum);
+	}
+	printf("cycled mutex %d\n", cycledMutex);
+	for(int i=0; i<cycledMutex; i++){
+		printf("%lu ", edges[i].thid);
+	}
 }
 //∞∞¿∫ æ≤∑πµÂø° §¿÷¥¬¡ˆ ∞ÀªÁ
 int check1(){
@@ -178,6 +220,7 @@ int check2(){
 //
 int check3(){
 	return 1;
+
 }
 int
 pthread_mutex_lock (pthread_mutex_t *mutex)
@@ -193,6 +236,7 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
                 exit(1); 
 
 	if (n_mutex == 1) {
+		pthread_mutex_lock(&localmutex);
 		//add to monitor array
 		addToMonitor(pthread_self(), mutex);
         	MakeAdjArray();
@@ -203,13 +247,14 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 		for(int i=0; i<count; i++){
         	    checker[i] = 0;
 	        }
-		int index=cycleFinder(checker,0,count,0);		
+		int index=cycleFinder(checker,0,count);		
 		if(index){
 			//ªÁ¿Ã≈¨¿Ã ¿÷¥Ÿ∏È
 			int cycledMutex = countMutex(checker,index,count);//ªÁ¿Ã≈¨ø° ¿÷¥¬ ≥ÎµÂ ºˆ
-			Edge edges[cycleMutex];
-			fillEdges(checker,index,edges);
-
+			printf("%d", cycledMutex);
+			struct Edge edges[cycledMutex];
+			fillEdges(checker,index,edges,cycledMutex);
+		/*
 			if(check1()&&check2()&&check3()){
 				//¿ß«Ë«— ªÁ¿Ã≈¨¿”¿ª ∞®¡ˆ-> backtrace »£√‚
 				int i ;
@@ -227,8 +272,9 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
                 		fprintf(stderr, "============\n\n") ;
                 
 			
-			}
+			}*/
 		}
+		pthread_mutex_unlock(&localmutex);
 	}	
 		
     	
