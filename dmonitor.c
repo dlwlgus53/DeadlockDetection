@@ -119,8 +119,8 @@ void MakeAdjArray(){
     return;
 }
 //find cycle
-int cycleFinder(int checker[],int i, int count){
-    checker[i] = 1;
+int cycleFinder(int checker[],int i, int count,int index){
+    checker[i] = index;
     int j=0;
     for(j=0; j<count; j++){
         if(adjArray[i][j] == 1){
@@ -130,10 +130,11 @@ int cycleFinder(int checker[],int i, int count){
                     printf("%d ", checker[j]);
                 }
                 printf("|");
-                return 1;
+                return index;
             }
             else{
-                return cycleFinder(checker, j,count);
+		index++;
+                return cycleFinder(checker, j,count,index);
             }
             
         }
@@ -197,9 +198,8 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
             checker[i] = 0;
 	    ans[i]=0;
         }
-
-	printf("cycle : %d\n",cycleFinder(checker,0,count));
-	printf("");
+	
+	printf("cycle : %d\n",cycleFinder(checker,0,count,0));
 		int i ;
 		void * arr[10] ;
 		char ** stack ;
