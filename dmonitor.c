@@ -5,7 +5,7 @@
 #include <execinfo.h>
 #include <pthread.h>
 #include <unistd.h>
-
+#include <signal.h>
 #define mutexNum 100
 #define threadNum 10
 
@@ -20,13 +20,53 @@ struct Edge
 	pthread_mutex_t *src;
 	pthread_mutex_t *dest;
 };
+struct thEdge
+{
+ 	pthread_t src; 
+	pthread_t dest;
+};
+
 
 pthread_mutex_t localmutex = PTHREAD_MUTEX_INITIALIZER;
 struct Mnode monitor[threadNum][mutexNum];
 pthread_mutex_t*mArr[mutexNum];
 int ** adjArray;
 //thread array(to see hierachy of thread)
-pthread_t thArr[threadNum][threadNum]={0};
+struct thEdge thEdges[threadNum];
+
+ 
+
+//segfault가 발생했을 때 호출될 함수
+
+void sighandler(int sig)
+{
+    void *array[10];
+    size_t size;
+    char **strings;
+    size_t i;
+
+ 
+
+    size = backtrace(array, 10);
+
+    strings = backtrace_symbols(array, size);
+
+ 
+
+    //3. 앞에서 터득한 backtrace 정보 출력. 단 sighandler 스택 프레임은 제외하기 위해 2번 프레임부터 출력합니다.
+
+    for(i = 2; i < size; i++)
+
+        printf("%d: %s\n", i - 2, strings[i]);
+
+ 
+
+    free(strings);
+
+ 
+
+    exit(1);
+}
 
 
 void addToMonitor( pthread_t thid,pthread_mutex_t *mutex){//add to monitor array
@@ -123,7 +163,8 @@ void MakeAdjArray(){
 //find cycle
 int cycleFinder(int* checker,int i, int count){
   //checker[i] = index;
-    int j=0;
+ 	printf("i %d  count  %d\n",i, count);  
+int j=0;
     for(j=0; j<count; j++){
         if(adjArray[i][j] == 1){
             if(checker[j] == 1){
@@ -243,6 +284,8 @@ void printer(){
 int
 pthread_mutex_lock (pthread_mutex_t *mutex)
 {
+	signal(SIGSEGV, sighandler); 
+
 	static __thread int n_mutex = 0 ; //https://gcc.gnu.org/onlinedocs/gcc-3.3/gcc/Thread-Local.html
 	n_mutex += 1 ;
 
@@ -254,8 +297,7 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
                 exit(1); 
 
 	if (n_mutex == 1) {
-				
-		pthread_mutex_lock(&localmutex);
+	 pthread_mutex_lock(&localmutex);			
 		//add to monitor array
 		addToMonitor(pthread_self(), mutex);
         	MakeAdjArray();
@@ -295,21 +337,37 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
    				fclose (fp);
 			}
 		}
-		pthread_mutex_unlock(&localmutex);
+		 pthread_mutex_unlock(&localmutex);
 	}	
 		
     	
 	n_mutex-= 1 ;
-
+	
 	return 0;
 }
+/*insert pthread_id to thArr*/
 
-int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void *), void *arg){
+void addTothEdges( pthread_t present_th, pthread_t new_th){//add to monitor array
+    for(int i=0; i<threadNum; i++){
+		if(thEdges[i].src == 0){
+			thEdges[i].src = present_th;
+			thEdges[i].dest = new_th;
+			return;
+		}
+	}
+}
+	
+/* pthread array name : thEgeds */
+
+int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(void *), void *arg){
+	signal(SIGSEGV, sighandler); 
+
 	int return_value=0;
 	static __thread int n_create = 0 ; //https://gcc.gnu.org/onlinedocs/gcc-3.3/gcc/Thread-Local.html
 	n_create += 1 ;
 
-	void *(*pthread_createp)(size_t size) ;
+
+	static int (*pthread_createp)(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(void *), void *arg) ;
 	char * error ;
 	
 	pthread_createp = dlsym(RTLD_NEXT, "pthread_create") ;
@@ -319,23 +377,22 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
 
 	if (n_create == 1) {
 		
-		 pthread_mutex_lock(&localmutex);
-		return_value = (void *)pthread_createp(*thread,(void*)*attr,*start_routine,(void *)arg);
-		/*int i ;
-		void * arr[10] ;
-		char ** stack ;
+		
+	//pthread_mutex_lock(&localmutex);
+		return_value = pthread_createp(thread, attr, start, arg);
+	
+		pthread_t src = pthread_self();
 
-		fprintf(stderr, "malloc(%d)=%p\n", (int) size, ptr) ;
-
-		size_t sz = backtrace(arr, 10) ;
-		stack = backtrace_symbols(arr, sz) ;
-
-		fprintf(stderr, "Stack trace\n") ;
-		fprintf(stderr, "============\n") ;
-		for (i = 0 ; i < sz ; i++)
-			fprintf(stderr, "[%d] %s\n", i, stack[i]) ;
-		fprintf(stderr, "============\n\n") ;
-		pthread_mutex_unlock(&localmutex);*/
+	//	parameter : present thread, created thread
+		addTothEdges(src, *thread);
+		for(int i=0; i<threadNum; i++){
+			if(thEdges[i].src == 0){
+				printf("\n"); break;
+		}			
+				printf("%lu->%lu ",thEdges[i].src, thEdges[i].dest);
+		}
+		
+ 	//pthread_mutex_unlock(&localmutex);
 	}
 
 	n_create -= 1 ;
