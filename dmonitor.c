@@ -283,7 +283,7 @@ int check3(struct Edge edges[],int count){
 		}
 	}
 	printf("link : %d, count : %d \n", link, count);
-	if(link >count-1) return 0;
+	if(link >=count-1) return 0;
 	else return 1;	
 		
 }
