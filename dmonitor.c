@@ -127,11 +127,11 @@ int mutexArray(){
             return lastPoint;
         }
 	for(int j=0; j<mutexNum; j++){
-            if(monitor[i][j].mutex == NULL)    break;
-            else{
-                int diff =1;// ���ο� ������ �ƴ� �������� �˷��ִ� ����-> ���Ӵٰ� �ʱ�ȭ
-                for(int k=0; k<lastPoint; k++){//������ mutex�� ������ �ִ� ������ �˻�.
-                    if( monitor[i][j].mutex == mArr[k])//������ �ʴ�-> diff=0 ���� ����
+            if(monitor[i][j].mutex == NULL)    break;   
+	 else{
+                int diff =1;
+                for(int k=0; k<lastPoint; k++){
+                    if( monitor[i][j].mutex == mArr[k])
                         diff=0;
                 }
                 if(diff ==1){
@@ -155,7 +155,6 @@ int getNum(pthread_mutex_t *mutex, int length){
 void MakeAdjArray(){
     int count = mutexArray();
     create2darray(count);
-   // int adjArray[count][count];
     
     for(int i=0; i<count; i++){
         for(int j=0; j<count; j++){
@@ -167,9 +166,10 @@ void MakeAdjArray(){
         if(monitor[i][0].thid == 0){
             return;
         }
-    for(int j=0; j<mutexNum; j+=2){
-        if(monitor[i][j+1].mutex == NULL)    break;//a->b ������ �ʿ��ϱ� ������ ���� �ε��� ������ j+1�� ������ Ȯ���ؾ���.
-        else{   
+    for(int j=0; j<mutexNum; j++){
+        if(monitor[i][j+1].mutex == NULL)    break;
+        if(monitor[i][j].mutex == monitor[i][j+1].mutex)	break;
+	else{   
                 int src = getNum(monitor[i][j].mutex, count);
                 int dest = getNum(monitor[i][j+1].mutex, count);
                 adjArray[src][dest] = 1;
@@ -230,6 +230,7 @@ fillThidnGuardnTime(pthread_mutex_t *src, pthread_mutex_t *dest,struct Edge* edg
             if(monitor[i][j+1].thid == 0)    break;
             else{
 			if(monitor[i][j].mutex == src && monitor[i][j+1].mutex == dest){
+				printf("(%d , %d)\n", i, j);
 				edge->thid = monitor[i][j].thid;
 				edge->time = monitor[i][j].time;
 				if(j>0)	edge->guard = monitor[i][j-1].mutex;
@@ -273,18 +274,21 @@ int check1(struct Edge edges[], int count){
 		}
 	printf("checker 1 : %d\n",diff);
 	return diff;
-
 }
+
 
 /*checker for find guard lock*/
 int check2(struct Edge edges[],int count){
 	/* 1 :danger(not same guard) 0 : safe(same guard)*/
-	
+	printf("check 2 count : %d\n", count);
+	if(monitor[0][0].mutex == monitor[1][0].mutex)	printf("same");
 	for(int i=0; i<count; i++){
 		if(edges[i].guard == NULL){
 			return 1;
 		}
 		for(int j=i+1; j<count; j++){
+			printf("in ch2\n");
+			printf("(%d %d)\n", i, j);
 			if(edges[j].guard == NULL)	return 1;
 			if(edges[i].guard != edges[j].guard) return 1;
 		}
@@ -387,7 +391,9 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 			printf("%d", cycledMutex);
 			struct Edge edges[cycledMutex];
 			fillEdges(checker,index,edges,cycledMutex);
-			if(check1(edges, count)&&check2(edges, count)&&check3(edges, count)){
+			if(check1(edges, cycledMutex)&&check2(edges, cycledMutex)&&check3(edges, cycledMutex)){
+				
+				printf("checker %d %d %d\n", check1(edges,cycledMutex), check2(edges, cycledMutex), check3(edges,cycledMutex));
 				printf("danger\n");
 				int i ;
                 		void * arr[10] ;
@@ -473,4 +479,3 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)
 	n_create -= 1 ;
 	return return_value ; 
 }
-
