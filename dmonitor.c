@@ -17,13 +17,15 @@
 #define threadNum 10
 
 struct timespec spec;
-
-struct Mnode//node for monitor
+/* node for monitor array */
+struct Mnode
 {       
         long time;
 	pthread_t thid; // initialized 0 
         pthread_mutex_t *mutex;
 };
+
+/* sturct for mutex connecing information */
 struct Edge
 {
 	long time;
@@ -32,6 +34,8 @@ struct Edge
 	pthread_mutex_t *dest;
 	pthread_mutex_t *guard;
 };
+
+/* struct for thEdge, Actually I didn't use this but it works properly with thread create hooking function*/
 struct thEdge
 {
  	long time;
@@ -39,23 +43,20 @@ struct thEdge
 	pthread_t dest;
 };
 
-
-
-
-
-
-
-pthread_mutex_t localmutex = PTHREAD_MUTEX_INITIALIZER;
+/* monitor array */
 struct Mnode monitor[threadNum][mutexNum];
+/* arr for mutex, by this arr, mutex get id number */
 pthread_mutex_t*mArr[mutexNum];
+
+/* array for make adjArray */
 int ** adjArray;
-//thread array(to see hierachy of thread)
+
+/* edges of thread, I didnt't use it but it works */
 struct thEdge thEdges[threadNum];
 
  
 
-//segfault가 발생했을 때 호출될 함수
-
+/* signal to detect debugging */
 void sighandler(int sig)
 {
     void *array[10];
@@ -85,7 +86,7 @@ void sighandler(int sig)
     exit(1);
 }
 
-
+/* Add mutex to monitor array. Same row has same thread_id, and new mutex goes next column index */
 void addToMonitor( pthread_t thid,pthread_mutex_t *mutex){//add to monitor array
     for(int i=0; i<threadNum; i++){
         if(monitor[i][0].thid == thid){
@@ -107,7 +108,7 @@ void addToMonitor( pthread_t thid,pthread_mutex_t *mutex){//add to monitor array
     }
 }
 
-// We return the pointer
+/* This is for make 2d Array */
 void **create2darray(int count) /* Allocate the array */
 {
     /* Check if allocation succeeded. (check for NULL pointer) */
@@ -118,7 +119,7 @@ void **create2darray(int count) /* Allocate the array */
 }
 
 
-//now have to find graph adjArray
+/* mutexArray() makes index-mutex array. ex(1-A, 2-C, 3-B)) */
 int mutexArray(){
     
     int lastPoint=0;
@@ -343,6 +344,8 @@ void printer(){
     }
 }
 
+/* mutex for mutex_lock hooking function */
+pthread_mutex_t localmutex = PTHREAD_MUTEX_INITIALIZER;
 int
 pthread_mutex_lock (pthread_mutex_t *mutex)
 {
