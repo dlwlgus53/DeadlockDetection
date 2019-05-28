@@ -6,16 +6,22 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <signal.h>
+#include <time.h>
+#include <sys/timeb.h>  /* ftime, timeb (for timestamp in millisecond) */
+#include <sys/time.h> 
 #define mutexNum 100
 #define threadNum 10
 
+struct timeval timer_usec;  
 struct Mnode//node for monitor
 {       
-        pthread_t thid; // initialized 0 
+        long long int time;
+	pthread_t thid; // initialized 0 
         pthread_mutex_t *mutex;
 };
 struct Edge
 {
+	long long int time;
 	pthread_t thid;
 	pthread_mutex_t *src;
 	pthread_mutex_t *dest;
@@ -23,9 +29,32 @@ struct Edge
 };
 struct thEdge
 {
- 	pthread_t src; 
+ 	long long int time;
+	pthread_t src; 
 	pthread_t dest;
 };
+/*
+  long long int timestamp_usec;
+  if (!gettimeofday(&timer_usec, NULL)) {
+    timestamp_usec = ((long long int) timer_usec.tv_sec) * 1000000ll + 
+                        (long long int) timer_usec.tv_usec;
+  }
+  else {
+    timestamp_usec = -1;
+  }
+*/
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 pthread_mutex_t localmutex = PTHREAD_MUTEX_INITIALIZER;
@@ -76,12 +105,16 @@ void addToMonitor( pthread_t thid,pthread_mutex_t *mutex){//add to monitor array
                 if(monitor[i][j].mutex == NULL){//������ ĭ �߰�
                     monitor[i][j].thid = thid;
                     monitor[i][j].mutex = mutex;
-                    return;
+                    if (!gettimeofday(&(monitor[i][j].time), NULL)) {
+    				timestamp_usec = ((long long int) timer_usec.tv_sec) * 1000000ll +
+                        		(long long int) timer_usec.tv_usec;
+  			}
                 }        
             }
         }else if(monitor[i][0].mutex == NULL){
             monitor[i][0].thid = thid;
             monitor[i][0].mutex = mutex;
+		monitor[i][0].time = time(NULL);
             return;
         }
     }
@@ -163,16 +196,15 @@ void MakeAdjArray(){
 //find cycle
 int cycleFinder(int* checker,int i, int count){
   //checker[i] = index;
- 	printf("i %d  count  %d\n",i, count);  
 int j=0;
     for(j=0; j<count; j++){
         if(adjArray[i][j] == 1){
             if(checker[j] == 1){
-                printf("|");
+                /*printf("|");
                 for (int j=0; j<count; j++){
                     printf("%d ", checker[j]);
                 }
-                printf("|");
+                printf("|");*/
                 return j;
             }
             else{
@@ -193,7 +225,6 @@ countMutex(int arr[], int index, int count){
 	for(int i=0; i<count; i++)	check[i] =0;
 	int mutexNode=0;
 	while(1){
-		printf("index %d ",index);
 		check[index]=1;
 		mutexNode++;
 		index = arr[index];
@@ -202,7 +233,7 @@ countMutex(int arr[], int index, int count){
 	return mutexNode;
 }
 void
-fillThidnGuard(pthread_mutex_t *src, pthread_mutex_t *dest,struct Edge* edge){
+fillThidnGuardnTime(pthread_mutex_t *src, pthread_mutex_t *dest,struct Edge* edge){
 	for(int i=0 ;i<threadNum; i++){
         if(monitor[i][0].thid == 0){
 		printf("find error..\n");
@@ -213,6 +244,7 @@ fillThidnGuard(pthread_mutex_t *src, pthread_mutex_t *dest,struct Edge* edge){
             else{
 			if(monitor[i][j].mutex == src && monitor[i][j+1].mutex == dest){
 				edge->thid = monitor[i][j].thid;
+				edge->time = monitor[i][j].time;
 				if(j>0)	edge->guard = monitor[i][j-1].mutex;
 				return;
 			} 
@@ -232,14 +264,14 @@ fillEdges(int* checker, int index, struct Edge* edges,int cycledMutex){
         	pthread_mutex_t *dest = mArr[destNum];
 
 		//find a-b in array
-		fillThidnGuard(src, dest,&edges[i]);
+		fillThidnGuardnTime(src, dest,&edges[i]);
 		//add to edges
 		edges[i].src = src;
 		edges[i].dest = dest;
+		
 
 		index = checker[destNum];
 	}
-	printf("cycled mutex %d\n", cycledMutex);
 	printf("%lu %lu\n", monitor[0][0].thid, monitor[1][0].thid);
 	for(int i=0; i<cycledMutex; i++){
 		printf("%lu ", edges[i].thid);
@@ -294,7 +326,21 @@ int check3(struct Edge edges[],int count){
 			}
 		}
 	}
+	
+	for(int i=0; i<threadNum; i++){
+		if(thEdges[i].src == 0) break;
+		for(int j=0; j<count; j++){
+			printf("time : %lu, %lu\n", thEdges[i].time,edges[j].time);
+			if(thEdges[i].time < edges[j].time){
+				printf("%lu, %lu\n", thEdges[i].time,edges[j].time);	
+			link =0; //->danger
+			}
+		}
+	}
+			
 	printf("link : %d, count : %d \n", link, count);
+	
+
 	if(link >=count-1) return 0;
 	else return 1;	
 		
@@ -389,6 +435,7 @@ void addTothEdges( pthread_t present_th, pthread_t new_th){//add to monitor arra
 		if(thEdges[i].src == 0){
 			thEdges[i].src = present_th;
 			thEdges[i].dest = new_th;
+			thEdges[i].time = time(NULL);
 			return;
 		}
 	}
