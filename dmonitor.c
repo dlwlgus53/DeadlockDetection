@@ -19,6 +19,7 @@ struct Edge
 	pthread_t thid;
 	pthread_mutex_t *src;
 	pthread_mutex_t *dest;
+	pthread_mutex_t *guard;
 };
 struct thEdge
 {
@@ -201,30 +202,29 @@ countMutex(int arr[], int index, int count){
 	}
 	return mutexNode;
 }
-pthread_t
-findThid(pthread_mutex_t *src, pthread_mutex_t *dest){
+void
+fillThidnGuard(pthread_mutex_t *src, pthread_mutex_t *dest,struct Edge* edge){
 	for(int i=0 ;i<threadNum; i++){
         if(monitor[i][0].thid == 0){
 		printf("find error..\n");
-            	return -1;
+            	return;
         }
         for(int j=0; j<mutexNum; j++){
             if(monitor[i][j+1].thid == 0)    break;
             else{
 			if(monitor[i][j].mutex == src && monitor[i][j+1].mutex == dest){
-				printf("index %d %d\n",i,j);
-				printf("ihey: %lu",monitor[i][j].thid);
-				return monitor[i][j].thid;
+				edge->thid = monitor[i][j].thid;
+				if(j>0)	edge->guard = monitor[i][j-1].mutex;
+				return;
 			} 
 		}
 	    }
         }
-	return -1;
+	return;
 }
+
 void
 fillEdges(int* checker, int index, struct Edge* edges,int cycledMutex){
-	//a->b, b->c��� ������ �ְ� ������	
-	//1->2	�� a->b�� �ٲ���
 	for(int i=0; i<cycledMutex; i++){
 		int srcNum = checker[index];
 		int destNum = checker[srcNum];
@@ -233,7 +233,7 @@ fillEdges(int* checker, int index, struct Edge* edges,int cycledMutex){
         	pthread_mutex_t *dest = mArr[destNum];
 
 		//find a-b in array
-		edges[i].thid  = findThid(src, dest);
+		fillThidnGuard(src, dest,&edges[i]);
 		//add to edges
 		edges[i].src = src;
 		edges[i].dest = dest;
@@ -257,11 +257,24 @@ int check1(struct Edge edges[], int count){
 	return diff;
 
 }
-//guard�� �ִ��� �˻�
+
+/*checker for find guard lock*/
 int check2(struct Edge edges[],int count){
-	return 1;
+	/* 1 :danger(not same guard) 0 : safe(same guard)*/
+	
+	for(int i=0; i<count; i++){
+		if(edges[i].guard == NULL){
+			return 1;
+		}
+		for(int j=i+1; j<count; j++){
+			if(edges[j].guard == NULL)	return 1;
+			if(edges[i].guard != edges[j].guard) return 1;
+		}
+	}
+	return 0;
+			
 }
-//
+
 int check3(struct Edge edges[],int count){
 	
 	//find n-1 connects
