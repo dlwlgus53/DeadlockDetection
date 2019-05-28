@@ -3,13 +3,11 @@
 #include <pthread.h>
 #include <string.h>
 
-pthread_mutex_t x;
-pthread_mutex_t y;
-pthread_mutex_t z;
+pthread_mutex_t x = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t y = PTHREAD_MUTEX_INITIALIZER;;
+pthread_mutex_t z = PTHREAD_MUTEX_INITIALIZER;
 
-pthread_mutex_init(&x);
-pthread_mutex_init(&y);
-pthread_mutex_init(&z);
+
 
 void * 
 threading1(void * ptr) 
@@ -47,8 +45,8 @@ main()
 
 		pthread_create(&(thread1), 0x0 ,threading1 , 0x0) ;
         pthread_create(&(thread2), 0x0 , threading2, 0x0) ;
-		pthread_join(&thread1, 0x0) ;
-        pthread_join(&thread2, 0x0) ;
+		pthread_join(thread1, 0x0) ;
+        pthread_join(thread2, 0x0) ;
 	
 	exit(0) ;
 }

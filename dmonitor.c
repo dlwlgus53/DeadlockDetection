@@ -54,11 +54,10 @@ void sighandler(int sig)
 
  
 
-    //3. 앞에서 터득한 backtrace 정보 출력. 단 sighandler 스택 프레임은 제외하기 위해 2번 프레임부터 출력합니다.
 
     for(i = 2; i < size; i++)
 
-        printf("%d: %s\n", i - 2, strings[i]);
+        printf("%lu: %s\n", i - 2, strings[i]);
 
  
 
@@ -342,12 +341,16 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 		for(int i=0; i<count; i++){
         	    checker[i] = 0;
 	        }
-		int index=cycleFinder(checker,0,count);		
+		int index;
+		for(int i=0; i<count; i++){
+			index=cycleFinder(checker,0,count);
+			if(index!=-1) break;		
+		}
 		printer();
-		if(index==!-1){
-			int cycledMutex = countMutex(checker,index,count);//����Ŭ�� �ִ� ��� ��
+		if(index!=-1){
+			int cycledMutex = countMutex(checker,index,count);
 			printf("%d", cycledMutex);
-			struct Edge edges[cycledMutex];//������ �� �ִ� node�� ���� ������ �������
+			struct Edge edges[cycledMutex];
 			fillEdges(checker,index,edges,cycledMutex);
 			if(check1(edges, count)&&check2(edges, count)&&check3(edges, count)){
 				printf("danger\n");
@@ -362,7 +365,7 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 				FILE * fp;
    				/* open the file for writing*/
    				fp = fopen ("dmonitor.trace","w");
- 
+ 				fprintf(fp,"%d\n", count);
    				for(i = 0; i < sz;i++){		
        					fprintf (fp, "%s\n", stack[i]);
    				}

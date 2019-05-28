@@ -3,11 +3,9 @@
 #include <pthread.h>
 #include <string.h>
 
-pthread_mutex_t a;
-pthread_mutex_t b;
+pthread_mutex_t a = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t b = PTHREAD_MUTEX_INITIALIZER;
 
-pthread_mutex_init(&a);
-pthread_mutex_init(&b);
 
 void * 
 single_thread(void * ptr) 
@@ -31,7 +29,7 @@ main()
 	pthread_t test ;
 
 		pthread_create(&(test), 0x0 , single_thread, 0x0) ;
-		pthread_join(&test, 0x0) ;
+		pthread_join(test, 0x0) ;
 	
 	exit(0) ;
 }
