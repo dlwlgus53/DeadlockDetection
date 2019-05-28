@@ -263,8 +263,29 @@ int check2(struct Edge edges[],int count){
 }
 //
 int check3(struct Edge edges[],int count){
-	return 1;
-
+	
+	//find n-1 connects
+	//in threadArr, find same thread id
+	//need count
+	//first. need to know find wheather they have link or not
+	//-1 : if there are 3 nodes, then number of link is 2
+	int link=0;
+	for(int i=0; i<threadNum; i++){
+		if(thEdges[i].src == 0)	break;
+		for(int j=0; j<count; j++){
+			if(thEdges[i].src == edges[j].thid){
+				for(int k=0; k<count; k++){
+					if(thEdges[i].dest == edges[k].thid){
+						link++;
+					}
+				}
+			}
+		}
+	}
+	printf("link : %d, count : %d \n", link, count);
+	if(link >count-1) return 0;
+	else return 1;	
+		
 }
 void printer(){
 	printf("=======================\n");
