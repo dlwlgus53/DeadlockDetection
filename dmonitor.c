@@ -260,10 +260,6 @@ fillEdges(int* checker, int index, struct Edge* edges,int cycledMutex){
 
 		index = checker[destNum];
 	}
-	//printf("%lu %lu\n", monitor[0][0].thid, monitor[1][0].thid);
-	for(int i=0; i<cycledMutex; i++){
-		//printf("%lu ", edges[i].thid);
-	}
 }
 int check1(struct Edge edges[], int count){
 	int diff =1;
@@ -272,7 +268,6 @@ int check1(struct Edge edges[], int count){
 			if(edges[i].thid == edges[j].thid)	diff=0;
 			}
 		}
-	printf("checker 1 : %d\n",diff);
 	return diff;
 }
 
@@ -280,8 +275,6 @@ int check1(struct Edge edges[], int count){
 /*checker for find guard lock*/
 int check2(struct Edge edges[],int count){
 	/* 1 :danger(not same guard) 0 : safe(same guard)*/
-	printf("check 2 count : %d\n", count);
-	if(monitor[0][0].mutex == monitor[1][0].mutex)	printf("same");
 	for(int i=0; i<count; i++){
 		if(edges[i].guard == NULL){
 			return 1;
@@ -322,17 +315,14 @@ int check3(struct Edge edges[],int count){
 	for(int i=0; i<threadNum; i++){
 		if(thEdges[i].src == 0) break;
 		for(int j=0; j<count; j++){
-			printf("time : %ld, %ld\n", thEdges[i].time,edges[j].time);
 			if(thEdges[i].src == edges[j].thid){
 			if(thEdges[i].time > edges[j].time){
-				printf("%ld, %ld\n", thEdges[i].time,edges[j].time);	
 				danger=0; //
 			}
 			}
 		}
 	}
 			
-	printf("check3 : danger : %d \n", danger);
 	
 
 	return danger;
@@ -381,10 +371,10 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
         	    checker[i] = 0;
 	        }
 		int index;
-	///	for(int i=0; i<count; i++){
+		for(int i=0; i<count; i++){
 			index=cycleFinder(checker,0,count);
-	//		if(index!=-1) break;		
-	//	}
+			if(index!=-1) break;		
+		}
 		printer();
 		if(index!=-1){
 			int cycledMutex = countMutex(checker,index,count);
