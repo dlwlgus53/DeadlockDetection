@@ -10,7 +10,7 @@ pthread_mutex_t mutex2 = PTHREAD_MUTEX_INITIALIZER;
 void 
 noise()
 {
-	usleep(rand() % 1000) ;
+//	usleep(rand() % 1000) ;
 }
 
 void *
@@ -31,7 +31,7 @@ main(int argc, char *argv[])
 	srand(time(0x0)) ;
 
 	pthread_create(&tid, NULL, thread, NULL);
-		
+	printf("v");		
 	pthread_mutex_lock(&mutex2); noise() ; 
 	pthread_mutex_lock(&mutex);	noise() ; 
 	pthread_mutex_unlock(&mutex); noise() ;
