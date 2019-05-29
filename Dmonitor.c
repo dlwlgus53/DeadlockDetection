@@ -70,43 +70,9 @@ void addToMonitor( pthread_t thid,pthread_mutex_t *mutex){//add to monitor array
 }
 
 
-void printer(){
-	printf("=======================\n");
-    for(int i=0 ;i<threadNum; i++){
-        printf("\n");
-	if(monitor[i][0].thid == 0)    return;
-        printf("[%d] ", i);
-	for(int j=0; j<mutexNum; j++){
-            if(monitor[i][j].thid == 0)    break;
-            else{
-                printf("%lu ", monitor[i][j].thid);
-            }
-        }
-    }
-}
-
-/* mutex for mutex_lock hooking function */
-pthread_mutex_t localmutex = PTHREAD_MUTEX_INITIALIZER;
-int
-pthread_mutex_lock (pthread_mutex_t *mutex)
+void printer()
 {
-
-	printf("?");
-	static __thread int n_mutex = 0 ; //https://gcc.gnu.org/onlinedocs/gcc-3.3/gcc/Thread-Local.html
-	n_mutex += 1 ;
-
-	int  (*lockp)(pthread_mutex_t *mutex) ;
-        char * error ;
-
-       	lockp = dlsym(RTLD_NEXT, "pthread_mutex_lock") ;
-        if ((error = dlerror()) != 0x0)
-                exit(1); 
-
-	if (n_mutex == 1) {
-		pthread_mutex_lock(&localmutex);			
-		//add to monitor array
-		addToMonitor(pthread_self(), mutex);
-	 	FILE *fp = fopen("dmonitor.trace","w");
+	FILE *fp = fopen("dmonitor.trace","w");
 		/*start file wirte*/
 		/* monitor.thid */
 		for(int i=0; i<threadNum;i++){
@@ -147,6 +113,32 @@ pthread_mutex_lock (pthread_mutex_t *mutex)
 		}
 		
 		fclose(fp);
+	
+
+}
+
+/* mutex for mutex_lock hooking function */
+pthread_mutex_t localmutex = PTHREAD_MUTEX_INITIALIZER;
+int
+pthread_mutex_lock (pthread_mutex_t *mutex)
+{
+
+	printf("?");
+	static __thread int n_mutex = 0 ; //https://gcc.gnu.org/onlinedocs/gcc-3.3/gcc/Thread-Local.html
+	n_mutex += 1 ;
+
+	int  (*lockp)(pthread_mutex_t *mutex) ;
+        char * error ;
+
+       	lockp = dlsym(RTLD_NEXT, "pthread_mutex_lock") ;
+        if ((error = dlerror()) != 0x0)
+                exit(1); 
+
+	if (n_mutex == 1) {
+		pthread_mutex_lock(&localmutex);			
+		//add to monitor array
+		addToMonitor(pthread_self(), mutex);
+		printer();
 		pthread_mutex_unlock(&localmutex);
 	}		
 	
@@ -185,12 +177,6 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)
 	pthread_t src = pthread_self();
 
 	addTothEdges(src, *thread);
-		for(int i=0; i<threadNum; i++){
-			if(thEdges[i].src == 0){
-				printf("\n"); break;
-		}			
-				printf("%lu->%lu ",thEdges[i].src, thEdges[i].dest);
-		}
-		
+ 	printer();		
 	return return_value ; 
 }
