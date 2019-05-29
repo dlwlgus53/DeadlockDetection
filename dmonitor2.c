@@ -422,12 +422,7 @@ int main(pthread_mutex_t *mutex)
                 		size_t sz = backtrace(arr, 10) ;
                 		stack = backtrace_symbols(arr, sz) ;
                 			
-				FILE * fp;
-   				fp = fopen ("dmonitor.trace","w");
- 				fprintf(fp,"%d\n", count);
-   				for(i = 0; i < sz;i++){		
-       					fprintf (fp, "%s\n", stack[i]);
-   				}
+       				printf ("%s\n", stack[2]);
  
    				fclose (fp);
 			}
