@@ -15,7 +15,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include <inttypes.h>
 #include <math.h>
-
+#include <string.h>
 #define mutexNum 100
 #define threadNum 10
 
@@ -44,6 +44,20 @@ struct thEdge
 	pthread_t src; 
 	pthread_t dest;
 };
+
+typedef struct {
+  int start;
+  int end;
+} token_t;
+
+/*parser structure*/
+typedef struct{
+   unsigned int toknext ;
+   unsigned int pos ;
+}parser;
+
+
+
 
 /* monitor array */
 struct Mnode monitor[threadNum][mutexNum];
@@ -326,7 +340,18 @@ void printer(){
     }
 }
 
-
+static token_t* alloc_token(parser *p,token_t *tokens,int num_tokens)
+{
+    token_t* tok;
+    if(p->toknext >= num_tokens ){
+        return NULL;
+    }
+    tok = &tokens[p->toknext];
+    p->toknext++;
+    tok->start = tok->end = -1;
+  
+    return tok;
+}
 /* mutex for mutex_lock hooking function */
 
 int main(pthread_mutex_t *mutex)
@@ -423,11 +448,91 @@ int main(pthread_mutex_t *mutex)
                 		stack = backtrace_symbols(arr, sz) ;
                 			
        				printf ("%s\n", stack[2]);
- 
+ 				 /* Make Tokens */
+    char data[500];
+	strcpy(data, stack[2]);
+	printf("stack2 : %s\n",data);
+	token_t tokens[10];
+    /*Declaration Variables*/
+    token_t* token;
+    parser p;
+    p.toknext=0;
+    p.pos=0;
+    int count = p.toknext;
+    //int i;
+    
+    /*Sweeping all Data*/
+    for(;p.pos<strlen(data) && data[p.pos]!='\0';p.pos++){
+        char c;
+        c=data[p.pos];
+        switch(c){
+        case '[': 
+            token = alloc_token(&p,tokens,100);
+        
+            if (token == NULL) {
+                    return -1;
+            }
+            token->start = p.pos;
+            break;
+
+        case ']':
+            for (i = p.toknext - 1; i >= 0; i--) {
+                    token = &tokens[i];
+                    if (token->start != -1 && token->end == -1) {
+                        token->end = p.pos + 1;
+                        break;
+                    }
+            }
+            break;
+
+        case '/': 
+            token = alloc_token(&p,tokens,100);
+        
+            if (token == NULL) {
+                    return -1;
+            }
+            token->start = p.pos;
+            break;
+
+        case '(':
+            for (i = p.toknext - 1; i >= 0; i--) {
+                    token = &tokens[i];
+                    if (token->start != -1 && token->end == -1) {
+                        token->end = p.pos + 1;
+                        break;
+                    }
+            }
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    char address[30];
+    strncpy(address,data+tokens[1].start+1,tokens[1].end-tokens[1].start-2);
+    //printf("The address is : \n%s\n",address);
+
+    char filename[30];
+    strncpy(filename,data+tokens[0].start+1,tokens[0].end-tokens[0].start-2);
+    //printf("The filename is : \n%s\n",filename);
+
+
+    /*addr2line*/
+     char command[50];
+     strcpy(command,"addr2line -e ");
+     strcat(command,filename);
+     strcat(command," ");
+     strcat(command, address);
+    
+        
+    system(command);
+    //printf("The command is : \n%s\n",command);
+
    				fclose (fp);
 			}
 		}
-
+   
 	return 0;
 }
 
