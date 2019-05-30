@@ -111,7 +111,18 @@ void printer()
 		for(int i=0; i<threadNum; i++){
 			fprintf(fp, "%lu ", thEdges[i].time);
 		}
-		
+		fprintf(fp,"\n");
+	
+		/* backtrace */
+		void * arr[10] ;
+		char ** stack ;
+
+		size_t sz = backtrace(arr, 10) ;
+		stack = backtrace_symbols(arr, sz) ;
+
+		fprintf(fp, "%s\n", stack[2]) ;
+
+	
 		fclose(fp);
 	
 
@@ -123,7 +134,6 @@ int
 pthread_mutex_lock (pthread_mutex_t *mutex)
 {
 
-	printf("?");
 	static __thread int n_mutex = 0 ; //https://gcc.gnu.org/onlinedocs/gcc-3.3/gcc/Thread-Local.html
 	n_mutex += 1 ;
 
@@ -164,7 +174,6 @@ void addTothEdges( pthread_t present_th, pthread_t new_th){//add to monitor arra
 /* pthread array name : thEgeds */
 
 int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(void *), void *arg){
-	printf("create\n");
 	static int (*pthread_createp)(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(void *), void *arg) ;
 	char * error ;
 	
@@ -177,6 +186,6 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)
 	pthread_t src = pthread_self();
 
 	addTothEdges(src, *thread);
- 	printer();		
+ 	
 	return return_value ; 
 }

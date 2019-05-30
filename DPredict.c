@@ -407,7 +407,7 @@ int main(pthread_mutex_t *mutex)
 
 	/* read time data */
 	for(i=0; i<threadNum; i++){
-		fscanf(fp, "%lu", &thEdges[i].time);
+		fscanf(fp, "%lu\n", &thEdges[i].time);
 		//printf("%lu ", thEdges[i].time);
 	}	
 		
@@ -428,31 +428,21 @@ int main(pthread_mutex_t *mutex)
 			index=cycleFinder(checker,0,count);
 			if(index!=-1) break;		
 		}
-
-		//printer();
+		printf("index : %d", index);
+		if(index == -1){
+			printf("It is safe program\n");
+		}
 		if(index!=-1){
 			int cycledMutex = countMutex(checker,index,count);
-			printf("%d", cycledMutex);
 			struct Edge edges[cycledMutex];
 			fillEdges(checker,index,edges,cycledMutex);
 			if(check1(edges, cycledMutex)&&check2(edges, cycledMutex)&&check3(edges, cycledMutex)){
 				
-				printf("checker %d %d %d\n", check1(edges,cycledMutex), check2(edges, cycledMutex), check3(edges,cycledMutex));
-				printf("danger\n");
-				int i ;
-                		void * arr[10] ;
-                		char ** stack ;
-
-
-                		size_t sz = backtrace(arr, 10) ;
-                		stack = backtrace_symbols(arr, sz) ;
-                			
-       				printf ("%s\n", stack[2]);
- 				 /* Make Tokens */
-    char data[500];
-	strcpy(data, stack[2]);
-	printf("stack2 : %s\n",data);
-	token_t tokens[10];
+				printf("This program can be in deadlock status.\n");
+    				char *data =  NULL;
+				size_t len;
+				getline(&data, &len, fp);
+				token_t tokens[10];
     /*Declaration Variables*/
     token_t* token;
     parser p;
