@@ -492,7 +492,8 @@ int main(pthread_mutex_t *mutex)
 			if(check1(edges, cycledMutex)&&check2(edges, cycledMutex)&&check3(edges, cycledMutex)){
 				/*Danger Section*/
 				printf("This program can be in deadlock status.\n");
-    			char *data =  NULL;
+    			printf("%d Threads are involved in DEADLOCK.\n",cycledMutex);
+                char *data =  NULL;
 				size_t len;
 				getline(&data, &len, fp);
 				
