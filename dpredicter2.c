@@ -15,7 +15,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include <inttypes.h>
 #include <math.h>
-#include <string.h>
+
 #define mutexNum 100
 #define threadNum 10
 
@@ -44,20 +44,6 @@ struct thEdge
 	pthread_t src; 
 	pthread_t dest;
 };
-
-typedef struct {
-  int start;
-  int end;
-} token_t;
-
-/*parser structure*/
-typedef struct{
-   unsigned int toknext ;
-   unsigned int pos ;
-}parser;
-
-
-
 
 /* monitor array */
 struct Mnode monitor[threadNum][mutexNum];
@@ -247,7 +233,7 @@ fillThidnGuardnTime(pthread_mutex_t *src, pthread_mutex_t *dest,struct Edge* edg
             if(monitor[i][j+1].thid == 0)    break;
             else{
 			if(monitor[i][j].mutex == src && monitor[i][j+1].mutex == dest){
-				//printf("(%d , %d)\n", i, j);
+				printf("(%d , %d)\n", i, j);
 				edge->thid = monitor[i][j].thid;
 				edge->time = monitor[i][j].time;
 				if(j>0)	edge->guard = monitor[i][j-1].mutex;
@@ -297,8 +283,8 @@ int check2(struct Edge edges[],int count){
 			return 1;
 		}
 		for(int j=i+1; j<count; j++){
-			//printf("in ch2\n");
-			//printf("(%d %d)\n", i, j);
+			printf("in ch2\n");
+			printf("(%d %d)\n", i, j);
 			if(edges[j].guard == NULL)	return 1;
 			if(edges[i].guard != edges[j].guard) return 1;
 		}
@@ -340,69 +326,6 @@ void printer(){
     }
 }
 
-static token_t* alloc_token(parser *p,token_t *tokens,int num_tokens)
-{
-    token_t* tok;
-    if(p->toknext >= num_tokens ){
-        return NULL;
-    }
-    tok = &tokens[p->toknext];
-    p->toknext++;
-    tok->start = tok->end = -1;
-  
-    return tok;
-}
-/*Parser to store into tokens*/
-void spllit_store_token (parser *p,token_t *token,char *data,token_t *tokens)
-{
-    /*Sweeping all Data*/
-    for(;p->pos<strlen(data) && data[p->pos]!='\0';p->pos++){
-        char c;
-        c=data[p->pos];
-        switch(c){
-        case '[': 
-            token = alloc_token(p,tokens,100);
-        
-            if (token == NULL) {
-                    return ;
-            }
-            token->start = p->pos;
-            break;
-
-        case ']':
-            for (int i = p->toknext - 1; i >= 0; i--) {
-                    token = &tokens[i];
-                    if (token->start != -1 && token->end == -1) {
-                        token->end = p->pos + 1;
-                        break;
-                    }
-            }
-            break;
-
-        case '/': 
-            token = alloc_token(p,tokens,100);
-        
-            if (token == NULL) {
-                    return ;
-            }
-            token->start = p->pos;
-            break;
-
-        case '(':
-            for (int i = p->toknext - 1; i >= 0; i--) {
-                    token = &tokens[i];
-                    if (token->start != -1 && token->end == -1) {
-                        token->end = p->pos + 1;
-                        break;
-                    }
-            }
-            break;
-
-        default:
-            break;
-        }
-    }
-}
 
 /* mutex for mutex_lock hooking function */
 
@@ -459,7 +382,7 @@ int main(pthread_mutex_t *mutex)
 
 	/* read time data */
 	for(i=0; i<threadNum; i++){
-		fscanf(fp, "%lu\n", &thEdges[i].time);
+		fscanf(fp, "%lu", &thEdges[i].time);
 		//printf("%lu ", thEdges[i].time);
 	}	
 		
@@ -480,60 +403,31 @@ int main(pthread_mutex_t *mutex)
 			index=cycleFinder(checker,0,count);
 			if(index!=-1) break;		
 		}
-		/*When cycle is not detected*/
-		if(index == -1){
-			printf("It is safe program\n");
-		}
-		if(index!=-1){ //When cycle is detected
+
+		//printer();
+		if(index!=-1){
 			int cycledMutex = countMutex(checker,index,count);
+			printf("%d", cycledMutex);
 			struct Edge edges[cycledMutex];
 			fillEdges(checker,index,edges,cycledMutex);
-
 			if(check1(edges, cycledMutex)&&check2(edges, cycledMutex)&&check3(edges, cycledMutex)){
-				/*Danger Section*/
-				printf("This program can be in deadlock status.\n");
-    			char *data =  NULL;
-				size_t len;
-				getline(&data, &len, fp);
 				
-    
-                /*Declaration Variables*/
-                token_t tokens[10];
-                token_t* token;
-                parser p;
-                p.toknext=0;//parser Initialization
-                p.pos=0;
-            
-                spllit_store_token (&p,token,data,tokens);
+				printf("checker %d %d %d\n", check1(edges,cycledMutex), check2(edges, cycledMutex), check3(edges,cycledMutex));
+				printf("danger\n");
+				int i ;
+                		void * arr[10] ;
+                		char ** stack ;
 
-                char address[30];
-                strncpy(address,data+tokens[1].start+1,tokens[1].end-tokens[1].start-2);
-                //printf("The address is : \n%s\n",address);
 
-                char filename[30];
-                strncpy(filename,data+tokens[0].start+1,tokens[0].end-tokens[0].start-2);
-                //printf("The filename is : \n%s\n",filename);
-
-                /*addr2line*/
-                char command[50];
-                strcpy(command,"addr2line -e ");
-                strcat(command,filename);
-                strcat(command," ");
-                strcat(command, address);
-                
-                    
-                system(command);
-                //printf("The command is : \n%s\n",command);
-
-                
+                		size_t sz = backtrace(arr, 10) ;
+                		stack = backtrace_symbols(arr, sz) ;
+                			
+       				printf ("%s\n", stack[2]);
+ 
+   				fclose (fp);
 			}
-            else{ // Cycle is detected ,but safe
-                printf("It is safe program\n");
-            }
 		}
-        
-        
-    fclose (fp);
+
 	return 0;
 }
 

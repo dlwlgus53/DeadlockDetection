@@ -8,4 +8,4 @@ all:
 	gcc -o abba -g abba.c -lpthread
 	gcc DPredict.c -o DPredict -lpthread
 clean:
-	rm -rf Dmonitor.so DDetector.so Thread_Creation_example Single_threaded_example dinning abba DPredict	
+	rm -rf Dmonitor.so DDetector.so Thread_Creation_example Single_threaded_example dinning abba DPredict Gate_Lock_example	

@@ -17,7 +17,7 @@ void
 printer(){
 	struct Node* current = head;
 	while(current !=NULL){
-		printf(" %d->", current->count);
+//		printf(" %d->", current->count);
 		current = current->next;
 	}
 	printf("\n");
