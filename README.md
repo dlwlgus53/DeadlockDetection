@@ -4,7 +4,7 @@ Deadlock detection and predict in pa3
 URL link https://youtu.be/0byCj3EWGvg
 
 
-build script
+#### build script
 0. make
 1. LD_PRELOAD=./DDectector.so ./abba
 
