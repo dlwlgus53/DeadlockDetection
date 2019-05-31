@@ -339,7 +339,24 @@ void printer(){
         }
     }
 }
-
+int getThNum(struct Edge edges[],int count){
+	pthread_t check[count];
+	int index=0;
+	for(int i=0; i<count; i++){
+		int diff =1;
+		for(int j=0; j<count; j++){
+			if(edges[i].thid == check[j])	diff=0;
+	}
+		if(diff == 1){
+			check[index] = edges[i].thid;
+			index++;
+		}
+	}
+	
+	return index;
+ 
+	
+}
 static token_t* alloc_token(parser *p,token_t *tokens,int num_tokens)
 {
     token_t* tok;
@@ -491,9 +508,10 @@ int main(pthread_mutex_t *mutex)
 
 			if(check1(edges, cycledMutex)&&check2(edges, cycledMutex)&&check3(edges, cycledMutex)){
 				/*Danger Section*/
+				int thNum = getThNum(edges,cycledMutex);
 				printf("This program can be in deadlock status.\n");
-    			printf("%d Threads are involved in DEADLOCK.\n",cycledMutex);
-                char *data =  NULL;
+    				printf("%d Threads are involved in DEADLOCK.\n",thNum);
+                		char *data =  NULL;
 				size_t len;
 				getline(&data, &len, fp);
 				

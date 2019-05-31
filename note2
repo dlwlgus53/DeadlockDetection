@@ -1,1 +1,0 @@
-gcc -g -Wall -o dinning dinning.c dmonitor.so -lphread
