@@ -14,8 +14,7 @@ URL link https://youtu.be/0byCj3EWGvg
 3. LD_PRELOAD=./Dmonitor.so ./dinning
     cat dmonitor.trace
     ./DPredict
-4. 
-LD_PRELOAD=./Dmonitor.so ./Single_threaded_example
+4. LD_PRELOAD=./Dmonitor.so ./Single_threaded_example
     cat dmonitor.trace
     ./DPredict
 LD_PRELOAD=./Dmonitor.so ./Gate_Lock_exampe
