@@ -9,11 +9,13 @@ URL link https://youtu.be/0byCj3EWGvg
 #### build script
 ###### 0. make
 
+1.
 `LD_PRELOAD=./DDectector.so ./abba`
 
-###### LD_PRELOAD=./Dmonitor.so ./abba 
-###### cat dmonitor.trace
-###### ./DPredict
+2. 
+`LD_PRELOAD=./Dmonitor.so ./abba 
+cat dmonitor.trace
+./DPredict`
 
 ###### LD_PRELOAD=./Dmonitor.so ./dinning
 ###### cat dmonitor.trace
