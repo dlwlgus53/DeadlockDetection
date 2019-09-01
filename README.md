@@ -2,7 +2,7 @@
 
 ###### 2019년 1학기 OS 프로젝트3 Deadlock detection and predict
 
-### _데드락 사이클 탐지를 활용한 데드락 detection and predict 프로그램
+#### 데드락 사이클 탐지를 활용한 데드락 detection and predict 프로그램
 
 ## Report/ Demo Video
 ##### [Report URL](https://github.com/dlwlgus53/DeadlockDetection/blob/master/Pa3.pdf)
