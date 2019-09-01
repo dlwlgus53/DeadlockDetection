@@ -1,15 +1,15 @@
 # DeadlockDetection
 
-###### 2019년 1학기 OS 프로젝트3 
-###### Deadlock detection and predict
-##### 데드락 사이클 탐지를 활용한 데드락 detection and predict 프로그램
+###### 2019년 1학기 OS 프로젝트3 Deadlock detection and predict
 
-#### report/ demo video
+### 데드락 사이클 탐지를 활용한 데드락 detection and predict 프로그램
+
+## report/ demo video
 ##### [report](https://github.com/dlwlgus53/DeadlockDetection/blob/master/Pa3.pdf)
 ##### [demo vidieo](https://youtu.be/0byCj3EWGvg)
 
 
-#### build script
+## build script
 ##### 0. make
 
 ##### 1. abba deadlock detect
