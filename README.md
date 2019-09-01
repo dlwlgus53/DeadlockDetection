@@ -13,9 +13,9 @@ URL link https://youtu.be/0byCj3EWGvg
 `LD_PRELOAD=./DDectector.so ./abba`
 
 ##### 2. abba deadlock detect + backtrace
-`LD_PRELOAD=./Dmonitor.so ./abba `
-`cat dmonitor.trace`
-`./DPredict`
+`LD_PRELOAD=./Dmonitor.so ./abba
+cat dmonitor.trace
+./DPredict`
 
 ##### 3. philosopher dinning deadlock detect + backtrace
 `LD_PRELOAD=./Dmonitor.so ./dinning`
